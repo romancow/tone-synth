@@ -1,11 +1,10 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
-import VPianoKeyboard from 'vue-piano-keyboard'
-import MyPianoKeyboard from '@/components/vue-piano-keyboard.vue'
+import VPianoKeyboard from '@/components/vue-piano-keyboard.vue'
 import * as Tone from 'tone' 
 
 @Component({
-	components: { VPianoKeyboard, MyPianoKeyboard },
+	components: { VPianoKeyboard },
 })
 export default class App extends Vue {
 
@@ -40,8 +39,7 @@ export default class App extends Vue {
 				option(value='sine') sine
 				option(value='square') square
 				option(value='sawtooth') saw
-		my-piano-keyboard#my-piano(@pressed='play', @depressed='stop')
-		//- v-piano-keyboard#piano(show-keys)
+		v-piano-keyboard#my-piano(@pressed='play', @depressed='stop')
 
 </template>
 

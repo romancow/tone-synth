@@ -8,9 +8,9 @@
 	},
 	"dependencies": {
 		"core-js": "^3.6.5",
+		"tone": "^14.7.77",
 		"vue": "^2.6.11",
 		"vue-class-component": "^7.2.3",
-		"vue-piano-keyboard": "^1.0.10",
 		"vue-property-decorator": "^9.1.2"
 	},
 	"devDependencies": {
