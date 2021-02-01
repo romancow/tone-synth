@@ -128,7 +128,7 @@ export default class VuePianoKeyboard extends Vue {
 				map[key.shortcut] = key
 			return map
 		}, {} as Record<string, PianoKey>)
-		
+
 		window.addEventListener("keydown", (event) => {
 			const key = keyMap[event.key]
 			if (key != null)
@@ -154,8 +154,10 @@ export default class VuePianoKeyboard extends Vue {
 			:class='getKeyClass(key)',
 			:style='getKeyStyle(key)',
 			:data-note='key.note',
-			@mousedown='down(key)',
-			@mouseup='up(key)'
+			@mousedown.left='down(key)',
+			@mouseup.left='up(key)',
+			@mouseover='$event.buttons & 1 && down(key)',
+			@mouseleave='$event.buttons & 1 && up(key)'
 		)
 
 </template>
