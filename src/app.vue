@@ -9,10 +9,17 @@ import * as Tone from 'tone'
 })
 export default class App extends Vue {
 
-	synth = new Tone.Synth().toDestination();
+	synth = new Tone.Synth({ oscillator: { type: 'sine' }}).toDestination();
+
+	get oscillatorType() {
+		return this.synth.oscillator.type
+	}
+
+	set oscillatorType(type: string) {
+		this.synth.oscillator.type = type as any
+	}
 
 	play(note: string) {
-		this.synth.oscillator.type = "sawtooth"
 		this.synth.triggerAttack(note)
 	}
 
@@ -27,6 +34,12 @@ export default class App extends Vue {
 <template  lang="pug">
 
 	div#app
+		.oscillator-select
+			label(for='oscillator-type') waveform
+			select(name='oscillator-type', v-model='oscillatorType')
+				option(value='sine') sine
+				option(value='square') square
+				option(value='sawtooth') saw
 		my-piano-keyboard#my-piano(@pressed='play', @depressed='stop')
 		//- v-piano-keyboard#piano(show-keys)
 
@@ -43,11 +56,11 @@ export default class App extends Vue {
 		color: #2c3e50
 		margin-top: 60px
 
+		.oscillator-select label
+			margin-right: 5px
+
 		#my-piano
 			height: 300px
 			margin: 20px
-
-		#piano
-			height: 300px
 
 </style>
