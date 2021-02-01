@@ -1,6 +1,7 @@
 <script lang="ts">
 import Vue from 'vue'
 import { Component, Emit } from 'vue-property-decorator'
+import TouchOverDispatcher from '@/utilities/touch-over-dispatcher'
 
 type Octave = -1 | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 type Note = `${'A' | 'A#' | 'B' | 'C' | 'C#' | 'D' | 'D#' | 'E' | 'F' | 'F#' | 'G' | 'G#'}${Octave}`
@@ -68,6 +69,7 @@ const notes = [
 export default class VuePianoKeyboard extends Vue {
 
 	keys = notes.map(args => PianoKey.create(...args))
+	touchOvers = new TouchOverDispatcher()
 
 	get whiteKeyCount() {
 		return this.keys
@@ -141,14 +143,16 @@ export default class VuePianoKeyboard extends Vue {
 				this.up(key)
 		})
 	}
-
 }
 </script>
 
 
 <template lang="pug">
 
-	.v-piano-keyboard
+	.v-piano-keyboard(
+		@touchmove='touchOvers.move($event)',
+		@touchend='touchOvers.end($event)'
+	)
 		.v-piano-keyboard-key(
 			v-for='key in keys',
 			:class='getKeyClass(key)',
@@ -157,7 +161,11 @@ export default class VuePianoKeyboard extends Vue {
 			@mousedown.left='down(key)',
 			@mouseup.left='up(key)',
 			@mouseover='$event.buttons & 1 && down(key)',
-			@mouseleave='$event.buttons & 1 && up(key)'
+			@mouseleave='$event.buttons & 1 && up(key)',
+			@touchstart.prevent='down(key)',
+			@touchend.prevent='up(key)',
+			@touchover='down(key)',
+			@touchleave='up(key)'
 		)
 
 </template>
