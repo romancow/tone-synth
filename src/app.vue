@@ -8,22 +8,38 @@ import * as Tone from 'tone'
 })
 export default class App extends Vue {
 
-	synth = new Tone.Synth({ oscillator: { type: 'sine' }}).toDestination();
+	powered = false
+
+	synth: Tone.Synth | null = null
 
 	get oscillatorType() {
-		return this.synth.oscillator.type
+		return this.synth?.oscillator.type || 'sine'
 	}
 
 	set oscillatorType(type: string) {
-		this.synth.oscillator.type = type as any
+		if (this.synth != null)
+			this.synth.oscillator.type = type as any
+	}
+
+	get powerState() {
+		return this.powered ? "on" : "off"
 	}
 
 	play(note: string) {
-		this.synth.triggerAttack(note)
+		this.synth?.triggerAttack(note, Tone.now())
 	}
 
 	stop(note: string) {
-		this.synth.triggerRelease()
+		this.synth?.triggerRelease(Tone.now())
+	}
+
+	power() {
+		if (this.synth == null) {
+			const type = this.oscillatorType as any
+			this.synth = new Tone.Synth({ oscillator: { type }}).toDestination()
+		}
+		this.synth.volume.value = this.powered ? -Infinity : 0
+		this.powered = !this.powered
 	}
 
 }
@@ -33,12 +49,19 @@ export default class App extends Vue {
 <template  lang="pug">
 
 	div#app
-		.oscillator-select
-			label(for='oscillator-type') waveform
-			select(name='oscillator-type', v-model='oscillatorType')
-				option(value='sine') sine
-				option(value='square') square
-				option(value='sawtooth') saw
+		.settings
+			.power
+				div.power-light(:class='`power-light-${powerState}`')
+				label power
+				button(@click='power', v-text='powerState')
+			.spacer
+			.oscillator-select
+				label(for='oscillator-type') waveform
+				select(name='oscillator-type', v-model='oscillatorType')
+					option(value='sine') sine
+					option(value='square') square
+					option(value='sawtooth') saw
+			.spacer
 		v-piano-keyboard#my-piano(@pressed='play', @depressed='stop')
 
 </template>
@@ -52,13 +75,34 @@ export default class App extends Vue {
 		-moz-osx-font-smoothing: grayscale
 		text-align: center
 		color: #2c3e50
-		margin-top: 60px
+		margin: 30px 20px 10px 20px
+		user-select: none
 
-		.oscillator-select label
+		.settings
+			display: flex
+			margin: 15px 3px
+
+			.spacer
+				flex: 1
+
+		.power-light
+			display: inline-block
+			background-color: dimgray
+			width: 5px
+			height: 5px
+			border: 1px solid gray
+			border-radius: 50%
 			margin-right: 5px
+
+			&.power-light-on
+				background-color: red
+				box-shadow:  0px 0px 2px red
+
+		.oscillator-select, .power
+			label
+				margin-right: 5px
 
 		#my-piano
 			height: 300px
-			margin: 20px
 
 </style>
