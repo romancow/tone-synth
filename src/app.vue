@@ -9,7 +9,7 @@ import * as Tone from 'tone'
 export default class App extends Vue {
 
 	powered = false
-
+	playing: string | null = null
 	synth: Tone.Synth | null = null
 
 	get oscillatorType() {
@@ -26,11 +26,18 @@ export default class App extends Vue {
 	}
 
 	play(note: string) {
-		this.synth?.triggerAttack(note, Tone.now())
+		if (this.playing)
+			this.synth?.setNote(note)
+		else
+			this.synth?.triggerAttack(note, Tone.now())
+		this.playing = note
 	}
 
 	stop(note: string) {
-		this.synth?.triggerRelease(Tone.now())
+		if (this.playing === note) {
+			this.synth?.triggerRelease(Tone.now())
+			this.playing = null
+		}
 	}
 
 	power() {
