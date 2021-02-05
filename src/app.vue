@@ -11,6 +11,26 @@ export default class App extends Vue {
 	powered = false
 	playing: string | null = null
 	synth: Tone.Synth | null = null
+	oscillatorTypes = [
+		"sine",
+		"square",
+		"sawtooth",
+		"triangle",
+		"pulse",
+		"pwm",
+		"amsine",
+		"amsquare",
+		"amsawtooth",
+		"amtriangle",
+		"fmsine",
+		"fmsquare",
+		"fmsawtooth",
+		"fmtriangle",
+		"fatsine",
+		"fatsquare",
+		"fatsawtooth",
+		"fattriangle"
+	]
 
 	get oscillatorType() {
 		return this.synth?.oscillator.type || 'sine'
@@ -65,9 +85,11 @@ export default class App extends Vue {
 			.oscillator-select
 				label(for='oscillator-type') waveform
 				select(name='oscillator-type', v-model='oscillatorType')
-					option(value='sine') sine
-					option(value='square') square
-					option(value='sawtooth') saw
+					option(
+						v-for='otype in oscillatorTypes',
+						:value='otype',
+						v-text='otype'
+					)
 			.spacer
 		v-piano-keyboard#my-piano(@pressed='play', @depressed='stop')
 
