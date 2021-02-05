@@ -1,4 +1,4 @@
-# vue-tone-synth
+# Tone Synth
 Try it [here](https://romancow.github.io/tone-synth/).
 
 ## Project setup
