@@ -1,0 +1,25 @@
+name: Deploy
+
+on:
+  release:
+    types: [published]
+
+jobs:
+
+  deploy-github-pages:
+    name: Deploy new version to GitHub Pages
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+      - name: Use Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: 12
+      - name: Install & Build
+        run: npm ci
+      - name: Deploy Release
+        run: npm run deploy
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
