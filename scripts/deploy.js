@@ -7,7 +7,9 @@ const {
 	GITHUB_TOKEN
 } = process.env
 
-const token = GITHUB_TOKEN ? `:${GITHUB_TOKEN}` : ""
+const url = GITHUB_TOKEN ?
+	`https://git:${GITHUB_TOKEN}@github.com/romancow/tone-synth.git` :
+	"git@github.com:romancow/tone-synth.git"
 
 const options = { cwd: 'dist' }
 const command = [
@@ -16,7 +18,7 @@ const command = [
 	GIT_CONFIG_EMAIL && `git config user.email "${GIT_CONFIG_EMAIL}"`,
 	"git add -A",
 	`git commit -m 'v${version}'`,
-	`git push -f git${token}@github.com:romancow/tone-synth.git master:gh-pages`
+	`git push -f ${url} master:gh-pages`
 ].filter(cmd => !!cmd).join(" && ")
 
 exec(command, options, (error, stdout, stderr) => {
