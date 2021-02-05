@@ -8,6 +8,11 @@
 		"predeploy": "npm run build",
 		"deploy": "node scripts/deploy.js"
 	},
+	"vuePlugins": {
+		"service": [
+			"plugins/html.js"
+		]
+	},
 	"dependencies": {
 		"core-js": "^3.6.5",
 		"tone": "^14.7.77",

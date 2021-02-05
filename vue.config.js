@@ -1,5 +1,10 @@
 const { NODE_ENV } = process.env
 
 module.exports = {
-	publicPath: (NODE_ENV === 'production') ? '/tone-synth/' : '/'
+	publicPath: (NODE_ENV === 'production') ? '/tone-synth/' : '/',
+	pluginOptions: {
+		html: {
+			title: "Tone Synth"
+		}
+	}
 }
