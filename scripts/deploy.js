@@ -3,8 +3,11 @@ const { exec } = require('child_process')
 
 const {
 	GIT_CONFIG_NAME,
-	GIT_CONFIG_EMAIL
+	GIT_CONFIG_EMAIL,
+	GITHUB_TOKEN
 } = process.env
+
+const token = GITHUB_TOKEN ? `:${GITHUB_TOKEN}` : ""
 
 const options = { cwd: 'dist' }
 const command = [
@@ -13,7 +16,7 @@ const command = [
 	GIT_CONFIG_EMAIL && `git config user.email "${GIT_CONFIG_EMAIL}"`,
 	"git add -A",
 	`git commit -m 'v${version}'`,
-	"git push -f git@github.com:romancow/tone-synth.git master:gh-pages"
+	`git push -f git${token}@github.com:romancow/tone-synth.git master:gh-pages`
 ].filter(cmd => !!cmd).join(" && ")
 
 exec(command, options, (error, stdout, stderr) => {
