@@ -35,7 +35,7 @@ namespace PianoKey {
 	}
 }
 
-const notes = [
+let notes = [
 	["C3", "q"],
 	["C#3", "2"],
 	["D3", "w"],
@@ -64,6 +64,8 @@ const notes = [
 	["A#4", ";"],
 	["B4", "/"]
 ] as [Note, string][]
+if (window.innerWidth < 720)
+	notes = notes.slice(14)
 
 @Component
 export default class VuePianoKeyboard extends Vue {
@@ -88,10 +90,10 @@ export default class VuePianoKeyboard extends Vue {
 	}
 
 	getKeyClass(key: PianoKey) {
-		const classes = [`v-piano-keyboard-key-${key.type}`]
-		if (key.pressed)
-			classes.push("v-piano-keyboard-key-pressed")
-		return classes
+		return [
+			`v-piano-keyboard-key-${key.type}`,
+			key.pressed && "v-piano-keyboard-key-pressed"
+		].filter(cls => !!cls)
 	}
 
 	getKeyStyle(key: PianoKey) {
