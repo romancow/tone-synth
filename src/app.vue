@@ -1,10 +1,11 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
 import VPianoKeyboard from '@/components/vue-piano-keyboard.vue'
+import VLed from '@/components/vue-led.vue'
 import * as Tone from 'tone' 
 
 @Component({
-	components: { VPianoKeyboard },
+	components: { VPianoKeyboard, VLed },
 })
 export default class App extends Vue {
 
@@ -77,12 +78,12 @@ export default class App extends Vue {
 
 	div#app
 		.settings
-			.power
-				div.power-light(:class='`power-light-${powerState}`')
+			.power.setting
+				v-led(v-model='powered')
 				label power
 				button(@click='power', v-text='powerState')
 			.spacer
-			.oscillator-select
+			.oscillator-select.setting
 				label(for='oscillator-type') waveform
 				select(name='oscillator-type', v-model='oscillatorType')
 					option(
@@ -114,20 +115,14 @@ export default class App extends Vue {
 			.spacer
 				flex: 1
 
-		.power-light
-			display: inline-block
-			background-color: dimgray
-			width: 5px
-			height: 5px
-			border: 1px solid gray
-			border-radius: 50%
+		.power .v-led
+			margin-top: 5px
 			margin-right: 5px
 
-			&.power-light-on
-				background-color: red
-				box-shadow:  0px 0px 2px red
+		.setting
+			display: flex
+			align-items: center
 
-		.oscillator-select, .power
 			label
 				margin-right: 5px
 
