@@ -68,7 +68,7 @@ if (window.innerWidth < 720)
 	notes = notes.slice(14)
 
 @Component
-export default class VuePianoKeyboard extends Vue {
+export default class VPianoKeyboard extends Vue {
 
 	keys = notes.map(args => PianoKey.create(...args))
 	touchOvers = new TouchOverDispatcher()
