@@ -1,49 +1,62 @@
 <script lang="ts">
-import { Component, Vue } from 'vue-property-decorator'
+import { Component, Vue, Watch } from 'vue-property-decorator'
+import instruments, { Instrument } from '@/instruments'
 import VPianoKeyboard from '@/components/vue-piano-keyboard.vue'
 import VLed from '@/components/vue-led.vue'
-import * as Tone from 'tone' 
+import VKnob from '@/components/vue-knob.vue'
+import * as Tone from 'tone'
 
 @Component({
-	components: { VPianoKeyboard, VLed },
+	components: { VPianoKeyboard, VLed, VKnob }
 })
 export default class App extends Vue {
 
-	powered = false
+	// powered = false
 	playing: string | null = null
+	instruments = instruments
+	instrument: Instrument = instruments[0]
 	synth: Tone.Synth | null = null
-	oscillatorTypes = [
-		"sine",
-		"square",
-		"sawtooth",
-		"triangle",
-		"pulse",
-		"pwm",
-		"amsine",
-		"amsquare",
-		"amsawtooth",
-		"amtriangle",
-		"fmsine",
-		"fmsquare",
-		"fmsawtooth",
-		"fmtriangle",
-		"fatsine",
-		"fatsquare",
-		"fatsawtooth",
-		"fattriangle"
-	]
 
-	get oscillatorType() {
-		return this.synth?.oscillator.type || 'sine'
+	get power() {
+		return (this.synth != null)
 	}
 
-	set oscillatorType(type: string) {
+	set power(power: boolean) {
+		if (power) this.setSynth()
+		else this.synth = null
+	}
+
+	get oscillators() {
+		return this.instrument?.oscillators ?? []
+	}
+
+	get oscillator() {
+		return this.synth?.oscillator?.type || ""
+	}
+
+	set oscillator(osc: string) {
 		if (this.synth != null)
-			this.synth.oscillator.type = type as any
+			this.synth.oscillator.type = osc as any
+	}
+
+	get hasOscillator() {
+		return !!this.oscillator
 	}
 
 	get powerState() {
-		return this.powered ? "on" : "off"
+		return this.power ? "on" : "off"
+	}
+
+	get isPolyphonic()
+
+	get detune() {
+		return this.synth?.detune.value ?? 0
+	}
+
+	set detune(detune: number) {
+		const { synth } = this
+		if (synth != null)
+			synth.detune.value = detune
 	}
 
 	play(note: string) {
@@ -61,13 +74,20 @@ export default class App extends Vue {
 		}
 	}
 
-	power() {
-		if (this.synth == null) {
-			const type = this.oscillatorType as any
-			this.synth = new Tone.Synth({ oscillator: { type }}).toDestination()
-		}
-		this.synth.volume.value = this.powered ? -Infinity : 0
-		this.powered = !this.powered
+	togglePower() {
+		this.power = !this.power
+	}
+
+	blurMe(event: Event) {
+		const elem = event.target as HTMLElement
+		elem?.blur?.()
+	}
+
+	@Watch('instrument')
+	setSynth({ oscillators = [], instrument}: Instrument = this.instrument) {
+		const type: any = oscillators[0]
+		const opts = type ? { oscillator: { type }} : undefined
+		this.synth = new instrument(opts).toDestination()
 	}
 
 }
@@ -79,19 +99,41 @@ export default class App extends Vue {
 	div#app
 		.settings
 			.power.setting
-				v-led(v-model='powered')
+				v-led(v-model='power')
 				label power
-				button(@click='power', v-text='powerState')
+				button(@click='togglePower', v-text='powerState')
 			.spacer
-			.oscillator-select.setting
-				label(for='oscillator-type') waveform
-				select(name='oscillator-type', v-model='oscillatorType')
+			.instrument.setting(:class='{ disabled: !power }')
+				label(for='instrument-select') instrument
+				select(
+					name='instrument-select',
+					:disabled='!power',
+					v-model='instrument',
+					@change='blurMe'
+				)
 					option(
-						v-for='otype in oscillatorTypes',
-						:value='otype',
-						v-text='otype'
+						v-for='instrument in instruments',
+						:value='instrument',
+						v-text='instrument.name'
 					)
 			.spacer
+			.oscillator.setting(:class='{ disabled: !hasOscillator }')
+				label(for='oscillator-select') oscillator
+				select(
+					name='oscillator-select',
+					:disabled='!hasOscillator',
+					v-model='oscillator',
+					@change='blurMe'
+				)
+					option(
+						v-for='osc in oscillators',
+						:value='osc',
+						v-text='osc'
+					)
+			//- .spacer
+			//- .detune.setting
+			//- 	label detune ({{ detune }})
+			//- 	v-knob(v-model='detune', :max='100', :min='-100', :step='10')
 		v-piano-keyboard#my-piano(@pressed='play', @depressed='stop')
 
 </template>
@@ -122,9 +164,19 @@ export default class App extends Vue {
 		.setting
 			display: flex
 			align-items: center
+			margin: 0 5px
 
 			label
 				margin-right: 5px
+
+			&.disabled label
+				color: lightgray
+
+			&.oscillator select
+				min-width: 92px
+
+			.v-knob
+				vertical-align: bottom
 
 		#my-piano
 			height: 300px
