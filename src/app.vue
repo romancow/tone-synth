@@ -63,7 +63,8 @@ export default class App extends Vue {
 
 	play(note: string) {
 		const { playing, isPolyphonic, synth } = this
-		if (playing && !isPolyphonic)
+		const canSetNote = !!synth?.setNote
+		if (canSetNote && playing && !isPolyphonic)
 			synth?.setNote(note)
 		else
 			synth?.triggerAttack(note, Tone.now())
