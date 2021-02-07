@@ -46,6 +46,7 @@ export default [
 	},{
 		name: 'poly',
 		instrument: Tone.PolySynth,
+		oscillators: oscillators.all,
 		isPoly: true
 	},{
 		name: 'pluck',

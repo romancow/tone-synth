@@ -31,12 +31,12 @@ export default class App extends Vue {
 	}
 
 	get oscillator() {
-		return this.synth?.oscillator?.type || ""
+		return this.synth?.get()?.oscillator?.type || ""
 	}
 
 	set oscillator(osc: string) {
 		if (this.synth != null)
-			this.synth.oscillator.type = osc as any
+			this.synth.set({ oscillator: { type: osc as any }})
 	}
 
 	get hasOscillator() {
