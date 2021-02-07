@@ -47,7 +47,9 @@ export default class App extends Vue {
 		return this.power ? "on" : "off"
 	}
 
-	get isPolyphonic()
+	get isPolyphonic() {
+		return this.instrument.isPoly ?? false
+	}
 
 	get detune() {
 		return this.synth?.detune.value ?? 0
@@ -60,18 +62,22 @@ export default class App extends Vue {
 	}
 
 	play(note: string) {
-		if (this.playing)
-			this.synth?.setNote(note)
+		const { playing, isPolyphonic, synth } = this
+		if (playing && !isPolyphonic)
+			synth?.setNote(note)
 		else
-			this.synth?.triggerAttack(note, Tone.now())
+			synth?.triggerAttack(note, Tone.now())
 		this.playing = note
 	}
 
 	stop(note: string) {
-		if (this.playing === note) {
-			this.synth?.triggerRelease(Tone.now())
+		const {isPolyphonic, playing, synth } = this
+		if (isPolyphonic)
+			synth?.triggerRelease(note)
+		else (playing === note)
+			synth?.triggerRelease(Tone.now())
+		if (playing === note)
 			this.playing = null
-		}
 	}
 
 	togglePower() {
