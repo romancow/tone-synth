@@ -4,6 +4,7 @@ import instruments, { Instrument } from '@/instruments'
 import * as Tone from 'tone'
 import * as _Array from '@/utilities/array'
 import Note from '@/utilities/note'
+import keyMap from '@/key-map'
 
 import VPianoKeyboard from '@/components/v-piano-keyboard.vue'
 import VLed from '@/components/vue-led.vue'
@@ -118,6 +119,20 @@ export default class App extends Vue {
 			else
 				this.synth?.triggerRelease(Tone.now())
 		}
+	}
+
+	created() {
+		window.addEventListener("keydown", event => {
+			const note = keyMap[event.key]
+			if (note != null)
+				this.playing = [...this.playing, note]
+		})
+
+		window.addEventListener("keyup", event => {
+			const note = keyMap[event.key]
+			if (note != null)
+				this.playing = this.playing.filter(down => down !== note)
+		})
 	}
 
 }
