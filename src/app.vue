@@ -68,26 +68,6 @@ export default class App extends Vue {
 			synth.detune.value = detune
 	}
 
-	// play(note: string) {
-	// 	const { playingSingle: playing, isPolyphonic, synth } = this
-	// 	const canSetNote = !!synth?.setNote
-	// 	if (canSetNote && playing && !isPolyphonic)
-	// 		synth?.setNote(note)
-	// 	else
-	// 		synth?.triggerAttack(note, Tone.now())
-	// 	this.playingSingle = note
-	// }
-
-	// stop(note: string) {
-	// 	const {isPolyphonic, playingSingle: playing , synth } = this
-	// 	if (isPolyphonic)
-	// 		synth?.triggerRelease(note)
-	// 	else (playing === note)
-	// 		synth?.triggerRelease(Tone.now())
-	// 	if (playing === note)
-	// 		this.playingSingle = null
-	// }
-
 	togglePower() {
 		this.power = !this.power
 	}
@@ -105,20 +85,35 @@ export default class App extends Vue {
 	}
 
 	@Watch('playing')
-	updatePlayingNotes(now: Note[], prev: Note[]) {
-		// const play = now.filter(note => !prev.includes(note))
-		// const stop = prev.filter(note => !now.includes(note))
+	updatePlaying(now: Note[], prev: Note[]) {
+		if (!this.power) return
+		if (this.instrument.isPoly)
+			this.updatePlayingPolyphonic(now, prev)
+		else
+			this.updatePlayingMonophonic(now, prev)
+	}
+
+	updatePlayingMonophonic(now: Note[], prev: Note[]) {
+		const { synth } = this
 		const nowNote = _Array.last(now)
 		const prevNote = _Array.last(prev)
-		const canSetNote = !!this.synth?.setNote
+		const canSetNote = !!synth?.setNote
 		if (nowNote !== prevNote) {
 			if (nowNote && prevNote && canSetNote)
-				this.synth?.setNote(nowNote)
+				synth?.setNote(nowNote)
 			else if (nowNote && !prev.includes(nowNote))
-				this.synth?.triggerAttack(nowNote, Tone.now())
+				synth?.triggerAttack(nowNote, Tone.now())
 			else
-				this.synth?.triggerRelease(Tone.now())
+				synth?.triggerRelease(Tone.now())
 		}
+	}
+
+	updatePlayingPolyphonic(now: Note[], prev: Note[]) {
+		const { synth } = this
+		const stop = prev.filter(note => !now.includes(note))
+		const play = now.filter(note => !prev.includes(note))
+		stop.forEach(note => synth?.triggerRelease(note))
+		play.forEach(note => synth?.triggerAttack(note, Tone.now()))
 	}
 
 	created() {
