@@ -107,9 +107,9 @@ export default class App extends Vue {
 			if (nowNote && prevNote && canSetNote)
 				synth?.setNote(nowNote)
 			else if (nowNote && !prev.includes(nowNote))
-				synth?.triggerAttack(nowNote, Tone.now())
+				synth?.triggerAttack(nowNote)
 			else
-				synth?.triggerRelease(Tone.now())
+				synth?.triggerRelease()
 		}
 	}
 
@@ -118,7 +118,7 @@ export default class App extends Vue {
 		const stop = prev.filter(note => !now.includes(note))
 		const play = now.filter(note => !prev.includes(note))
 		stop.forEach(note => synth?.triggerRelease(note))
-		play.forEach(note => synth?.triggerAttack(note, Tone.now()))
+		play.forEach(note => synth?.triggerAttack(note))
 	}
 
 	created() {
