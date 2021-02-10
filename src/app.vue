@@ -114,7 +114,7 @@ export default class App extends Vue {
 		if (nowNote !== prevNote) {
 			if (nowNote && prevNote && canSetNote)
 				this.synth?.setNote(nowNote)
-			else if (nowNote)
+			else if (nowNote && !prev.includes(nowNote))
 				this.synth?.triggerAttack(nowNote, Tone.now())
 			else
 				this.synth?.triggerRelease(Tone.now())
