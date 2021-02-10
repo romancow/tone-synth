@@ -3,6 +3,7 @@ import { Component, Vue, Watch } from 'vue-property-decorator'
 import instruments, { Instrument } from '@/instruments'
 import * as Tone from 'tone'
 import * as _Array from '@/utilities/array'
+import * as _Object from '@/utilities/object'
 import Note from '@/utilities/note'
 import keyMap from '@/key-map'
 
@@ -66,6 +67,10 @@ export default class App extends Vue {
 		const { synth } = this
 		if (synth != null)
 			synth.detune.value = detune
+	}
+
+	get noteToKeyMap() {
+		return _Object.invert(keyMap)
 	}
 
 	togglePower() {
@@ -175,6 +180,8 @@ export default class App extends Vue {
 			//- 	label detune ({{ detune }})
 			//- 	v-knob(v-model='detune', :max='100', :min='-100', :step='10')
 		v-piano-keyboard#my-piano(v-model='playing')
+			template(v-slot:key='{ note }')
+				span(v-text='noteToKeyMap[note]')
 
 </template>
 
