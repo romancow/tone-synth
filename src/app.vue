@@ -1,18 +1,20 @@
 <script lang="ts">
 import { Component, Vue, Watch } from 'vue-property-decorator'
 import instruments, { Instrument } from '@/instruments'
-import VPianoKeyboard from '@/components/vue-piano-keyboard.vue'
+import * as Tone from 'tone'
+import * as _Array from '@/utilities/array'
+import Note from '@/utilities/note'
+
+import VPianoKeyboard from '@/components/v-piano-keyboard.vue'
 import VLed from '@/components/vue-led.vue'
 import VKnob from '@/components/vue-knob.vue'
-import * as Tone from 'tone'
 
 @Component({
 	components: { VPianoKeyboard, VLed, VKnob }
 })
 export default class App extends Vue {
 
-	// powered = false
-	playing: string | null = null
+	playing: Note[] = []
 	instruments = instruments
 	instrument: Instrument = instruments[0]
 	synth: Tone.Synth | null = null
@@ -51,6 +53,10 @@ export default class App extends Vue {
 		return this.instrument.isPoly ?? false
 	}
 
+	get isPlaying() {
+		return !!this.playing.length
+	}
+
 	get detune() {
 		return this.synth?.detune.value ?? 0
 	}
@@ -61,25 +67,25 @@ export default class App extends Vue {
 			synth.detune.value = detune
 	}
 
-	play(note: string) {
-		const { playing, isPolyphonic, synth } = this
-		const canSetNote = !!synth?.setNote
-		if (canSetNote && playing && !isPolyphonic)
-			synth?.setNote(note)
-		else
-			synth?.triggerAttack(note, Tone.now())
-		this.playing = note
-	}
+	// play(note: string) {
+	// 	const { playingSingle: playing, isPolyphonic, synth } = this
+	// 	const canSetNote = !!synth?.setNote
+	// 	if (canSetNote && playing && !isPolyphonic)
+	// 		synth?.setNote(note)
+	// 	else
+	// 		synth?.triggerAttack(note, Tone.now())
+	// 	this.playingSingle = note
+	// }
 
-	stop(note: string) {
-		const {isPolyphonic, playing, synth } = this
-		if (isPolyphonic)
-			synth?.triggerRelease(note)
-		else (playing === note)
-			synth?.triggerRelease(Tone.now())
-		if (playing === note)
-			this.playing = null
-	}
+	// stop(note: string) {
+	// 	const {isPolyphonic, playingSingle: playing , synth } = this
+	// 	if (isPolyphonic)
+	// 		synth?.triggerRelease(note)
+	// 	else (playing === note)
+	// 		synth?.triggerRelease(Tone.now())
+	// 	if (playing === note)
+	// 		this.playingSingle = null
+	// }
 
 	togglePower() {
 		this.power = !this.power
@@ -95,6 +101,23 @@ export default class App extends Vue {
 		const type: any = oscillators[0]
 		const opts = type ? { oscillator: { type }} : undefined
 		this.synth = new instrument(opts).toDestination()
+	}
+
+	@Watch('playing')
+	updatePlayingNotes(now: Note[], prev: Note[]) {
+		// const play = now.filter(note => !prev.includes(note))
+		// const stop = prev.filter(note => !now.includes(note))
+		const nowNote = _Array.last(now)
+		const prevNote = _Array.last(prev)
+		const canSetNote = !!this.synth?.setNote
+		if (nowNote !== prevNote) {
+			if (nowNote && prevNote && canSetNote)
+				this.synth?.setNote(nowNote)
+			else if (nowNote)
+				this.synth?.triggerAttack(nowNote, Tone.now())
+			else
+				this.synth?.triggerRelease(Tone.now())
+		}
 	}
 
 }
@@ -141,7 +164,7 @@ export default class App extends Vue {
 			//- .detune.setting
 			//- 	label detune ({{ detune }})
 			//- 	v-knob(v-model='detune', :max='100', :min='-100', :step='10')
-		v-piano-keyboard#my-piano(@pressed='play', @depressed='stop')
+		v-piano-keyboard#my-piano(v-model='playing')
 
 </template>
 
