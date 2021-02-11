@@ -55,10 +55,6 @@ export default class App extends Vue {
 		return this.instrument.isPoly ?? false
 	}
 
-	get isPlaying() {
-		return !!this.playing.length
-	}
-
 	get detune() {
 		return this.synth?.detune.value ?? 0
 	}
@@ -71,6 +67,11 @@ export default class App extends Vue {
 
 	get noteToKeyMap() {
 		return _Object.invert(keyMap)
+	}
+
+	isPlaying(note?: Note) {
+		const { playing } = this
+		return (note == null) ? !!playing.length : playing.includes(note)
 	}
 
 	togglePower() {
@@ -124,7 +125,7 @@ export default class App extends Vue {
 	created() {
 		window.addEventListener("keydown", event => {
 			const note = keyMap[event.key]
-			if (note != null)
+			if ((note != null) && !this.isPlaying(note))
 				this.playing = [...this.playing, note]
 		})
 

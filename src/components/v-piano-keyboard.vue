@@ -1,7 +1,8 @@
 <script lang="ts">
-import { Vue, Component, VModel, Prop, Emit } from 'vue-property-decorator'
+import { Vue, Component, VModel, Prop } from 'vue-property-decorator'
 import Note from '@/utilities/note'
 import TouchOverDispatcher from '@/utilities/touch-over-dispatcher'
+import * as _Array from '@/utilities/array'
 
 @Component
 export default class VPianoKeyboard extends Vue {
@@ -15,7 +16,7 @@ export default class VPianoKeyboard extends Vue {
 	@Prop({ default: 24 })
 	count!: number
 
-	touchOvers = new TouchOverDispatcher()
+	touchOvers!: TouchOverDispatcher
 
 	get notes() {
 		const { first, count } = this
@@ -38,6 +39,10 @@ export default class VPianoKeyboard extends Vue {
 	get blackKeyWidth() {
 		const { whiteKeyWidth } = this
 		return whiteKeyWidth * 0.65
+	}
+
+	get eventModel() {
+		return [...this.model]
 	}
 
 	getKeyClass(note: Note) {
@@ -67,23 +72,35 @@ export default class VPianoKeyboard extends Vue {
 		}
 	}
 
-	@Emit()
 	notedown(note: Note) {
-		this.model = [...this.model, note]
+		const { eventModel } = this
+		if(_Array.last(eventModel) != note) {
+			this.$emit('notedown', note)
+			this.model = _Array.append(_Array.remove(eventModel, note), note)
+		}
 	}
 
-	@Emit()
 	noteup(note: Note) {
-		this.model = this.model.filter(down => down !== note)
+		const { eventModel } = this
+		if (eventModel.includes(note)) {
+			this.$emit('noteup', note)
+			this.model = _Array.remove(this.eventModel, note)
+		}
 	}
 
+	created() {
+		this.touchOvers = new TouchOverDispatcher()
+	}
 }
 </script>
 
 
 <template lang="pug">
 
-	.v-piano-keyboard
+	.v-piano-keyboard(
+		@touchmove='touchOvers.move($event)',
+		@touchend='touchOvers.end($event)'
+	)
 		.v-piano-keyboard-key(
 			v-for='note in notes',
 			:key='note',
@@ -94,6 +111,11 @@ export default class VPianoKeyboard extends Vue {
 			@mouseup.left='noteup(note)',
 			@mouseover='$event.buttons & 1 && notedown(note)',
 			@mouseleave='$event.buttons & 1 && noteup(note)',
+			@touchstart.prevent='notedown(note)',
+			@touchend.prevent='noteup(note)',
+			@touchcancel='noteup(note)',
+			@touchover.stop='notedown(note)',
+			@touchleave.stop='noteup(note)'
 		)
 			slot(name='key', v-bind='getKeySlotProps(note)')
 
