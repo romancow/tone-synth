@@ -8,8 +8,8 @@ import Note from '@/utilities/note'
 import keyMap from '@/key-map'
 
 import VPianoKeyboard from '@/components/v-piano-keyboard.vue'
-import VLed from '@/components/vue-led.vue'
-import VKnob from '@/components/vue-knob.vue'
+import VLed from '@/components/v-led.vue'
+import VKnob from '@/components/v-knob.vue'
 
 const getKeyCount = () => (window.innerWidth < 720) ? 12 : 24
 
