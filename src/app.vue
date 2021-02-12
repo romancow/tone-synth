@@ -11,6 +11,8 @@ import VPianoKeyboard from '@/components/v-piano-keyboard.vue'
 import VLed from '@/components/vue-led.vue'
 import VKnob from '@/components/vue-knob.vue'
 
+const getKeyCount = () => (window.innerWidth < 720) ? 12 : 24
+
 @Component({
 	components: { VPianoKeyboard, VLed, VKnob }
 })
@@ -20,6 +22,7 @@ export default class App extends Vue {
 	instruments = instruments
 	instrument: Instrument = instruments[0]
 	synth: Tone.Synth | null = null
+	keyCount = getKeyCount()
 
 	get power() {
 		return (this.synth != null)
@@ -123,6 +126,10 @@ export default class App extends Vue {
 	}
 
 	created() {
+		window.addEventListener("resize", event => {
+			this.keyCount = getKeyCount()
+		})
+
 		window.addEventListener("keydown", event => {
 			const note = keyMap[event.key]
 			if ((note != null) && !this.isPlaying(note))
@@ -180,7 +187,7 @@ export default class App extends Vue {
 			//- .detune.setting
 			//- 	label detune ({{ detune }})
 			//- 	v-knob(v-model='detune', :max='100', :min='-100', :step='10')
-		v-piano-keyboard#my-piano(v-model='playing')
+		v-piano-keyboard#my-piano(v-model='playing', :count='keyCount')
 			template(v-slot:key='{ note }')
 				span(v-text='noteToKeyMap[note]')
 
