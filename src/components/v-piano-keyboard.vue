@@ -16,6 +16,9 @@ export default class VPianoKeyboard extends Vue {
 	@Prop({ default: 24 })
 	count!: number
 
+	@Prop({ default: false })
+	disabled!: boolean
+
 	touchOvers!: TouchOverDispatcher
 
 	get notes() {
@@ -73,16 +76,16 @@ export default class VPianoKeyboard extends Vue {
 	}
 
 	notedown(note: Note) {
-		const { eventModel } = this
-		if(_Array.last(eventModel) != note) {
+		const { eventModel, disabled } = this
+		if(!disabled && _Array.last(eventModel) != note) {
 			this.$emit('notedown', note)
 			this.model = _Array.append(_Array.remove(eventModel, note), note)
 		}
 	}
 
 	noteup(note: Note) {
-		const { eventModel } = this
-		if (eventModel.includes(note)) {
+		const { eventModel , disabled} = this
+		if (!disabled && eventModel.includes(note)) {
 			this.$emit('noteup', note)
 			this.model = _Array.remove(this.eventModel, note)
 		}
@@ -98,6 +101,7 @@ export default class VPianoKeyboard extends Vue {
 <template lang="pug">
 
 	.v-piano-keyboard(
+		:class='{ "v-piano-keyboard-disabled": disabled }',
 		@touchmove='touchOvers.move($event)',
 		@touchend='touchOvers.end($event)'
 	)
@@ -130,7 +134,7 @@ export default class VPianoKeyboard extends Vue {
 		position: relative
 		justify-content: start
 		overflow: hidden
-		user-select: none
+		user-select: none			
 
 		.v-piano-keyboard-key
 			box-sizing: border-box
@@ -181,5 +185,11 @@ export default class VPianoKeyboard extends Vue {
 
 			&:last-child
 				display: none
+
+		&.v-piano-keyboard-disabled
+			opacity: 0.5
+
+			.v-piano-keyboard-key-pressed
+				filter: grayscale(90%)
 
 </style>
