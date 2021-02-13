@@ -30,7 +30,11 @@ export default class App extends Vue {
 
 	set power(power: boolean) {
 		if (power) this.setSynth()
-		else this.synth = null
+		else {
+			this.playing = []
+			this.synth?.dispose()
+			this.synth = null
+		} 
 	}
 
 	get oscillators() {
@@ -132,13 +136,13 @@ export default class App extends Vue {
 
 		window.addEventListener("keydown", event => {
 			const note = keyMap[event.key]
-			if ((note != null) && !this.isPlaying(note))
+			if (this.power && (note != null) && !this.isPlaying(note))
 				this.playing = [...this.playing, note]
 		})
 
 		window.addEventListener("keyup", event => {
 			const note = keyMap[event.key]
-			if (note != null)
+			if (this.power && (note != null))
 				this.playing = this.playing.filter(down => down !== note)
 		})
 	}
@@ -187,7 +191,7 @@ export default class App extends Vue {
 			//- .detune.setting
 			//- 	label detune ({{ detune }})
 			//- 	v-knob(v-model='detune', :max='100', :min='-100', :step='10')
-		v-piano-keyboard#my-piano(v-model='playing', :count='keyCount')
+		v-piano-keyboard#my-piano(v-model='playing', :count='keyCount', :disabled='!power')
 			template(v-slot:key='{ note }')
 				span(v-text='noteToKeyMap[note]')
 
