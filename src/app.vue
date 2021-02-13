@@ -1,21 +1,28 @@
 <script lang="ts">
 import { Component, Vue, Watch } from 'vue-property-decorator'
 import instruments, { Instrument } from '@/instruments'
-import VPianoKeyboard from '@/components/vue-piano-keyboard.vue'
-import VLed from '@/components/vue-led.vue'
-import VKnob from '@/components/vue-knob.vue'
 import * as Tone from 'tone'
+import * as _Array from '@/utilities/array'
+import * as _Object from '@/utilities/object'
+import Note from '@/utilities/note'
+import keyMap from '@/key-map'
+
+import VPianoKeyboard from '@/components/v-piano-keyboard.vue'
+import VLed from '@/components/v-led.vue'
+import VKnob from '@/components/v-knob.vue'
+
+const getKeyCount = () => (window.innerWidth < 720) ? 12 : 24
 
 @Component({
 	components: { VPianoKeyboard, VLed, VKnob }
 })
 export default class App extends Vue {
 
-	// powered = false
-	playing: string | null = null
+	playing: Note[] = []
 	instruments = instruments
 	instrument: Instrument = instruments[0]
 	synth: Tone.Synth | null = null
+	keyCount = getKeyCount()
 
 	get power() {
 		return (this.synth != null)
@@ -23,7 +30,11 @@ export default class App extends Vue {
 
 	set power(power: boolean) {
 		if (power) this.setSynth()
-		else this.synth = null
+		else {
+			this.playing = []
+			this.synth?.dispose()
+			this.synth = null
+		} 
 	}
 
 	get oscillators() {
@@ -61,24 +72,13 @@ export default class App extends Vue {
 			synth.detune.value = detune
 	}
 
-	play(note: string) {
-		const { playing, isPolyphonic, synth } = this
-		const canSetNote = !!synth?.setNote
-		if (canSetNote && playing && !isPolyphonic)
-			synth?.setNote(note)
-		else
-			synth?.triggerAttack(note, Tone.now())
-		this.playing = note
+	get noteToKeyMap() {
+		return _Object.invert(keyMap)
 	}
 
-	stop(note: string) {
-		const {isPolyphonic, playing, synth } = this
-		if (isPolyphonic)
-			synth?.triggerRelease(note)
-		else (playing === note)
-			synth?.triggerRelease(Tone.now())
-		if (playing === note)
-			this.playing = null
+	isPlaying(note?: Note) {
+		const { playing } = this
+		return (note == null) ? !!playing.length : playing.includes(note)
 	}
 
 	togglePower() {
@@ -95,6 +95,56 @@ export default class App extends Vue {
 		const type: any = oscillators[0]
 		const opts = type ? { oscillator: { type }} : undefined
 		this.synth = new instrument(opts).toDestination()
+	}
+
+	@Watch('playing')
+	updatePlaying(now: Note[], prev: Note[]) {
+		if (!this.power) return
+		if (this.instrument.isPoly)
+			this.updatePlayingPolyphonic(now, prev)
+		else
+			this.updatePlayingMonophonic(now, prev)
+	}
+
+	updatePlayingMonophonic(now: Note[], prev: Note[]) {
+		const { synth } = this
+		const nowNote = _Array.last(now)
+		const prevNote = _Array.last(prev)
+		const canSetNote = !!synth?.setNote
+		if (nowNote !== prevNote) {
+			if (nowNote && prevNote && canSetNote)
+				synth?.setNote(nowNote)
+			else if (nowNote && !prev.includes(nowNote))
+				synth?.triggerAttack(nowNote)
+			else
+				synth?.triggerRelease()
+		}
+	}
+
+	updatePlayingPolyphonic(now: Note[], prev: Note[]) {
+		const { synth } = this
+		const stop = prev.filter(note => !now.includes(note))
+		const play = now.filter(note => !prev.includes(note))
+		stop.forEach(note => synth?.triggerRelease(note))
+		play.forEach(note => synth?.triggerAttack(note))
+	}
+
+	created() {
+		window.addEventListener("resize", event => {
+			this.keyCount = getKeyCount()
+		})
+
+		window.addEventListener("keydown", event => {
+			const note = keyMap[event.key]
+			if (this.power && (note != null) && !this.isPlaying(note))
+				this.playing = [...this.playing, note]
+		})
+
+		window.addEventListener("keyup", event => {
+			const note = keyMap[event.key]
+			if (this.power && (note != null))
+				this.playing = this.playing.filter(down => down !== note)
+		})
 	}
 
 }
@@ -141,7 +191,9 @@ export default class App extends Vue {
 			//- .detune.setting
 			//- 	label detune ({{ detune }})
 			//- 	v-knob(v-model='detune', :max='100', :min='-100', :step='10')
-		v-piano-keyboard#my-piano(@pressed='play', @depressed='stop')
+		v-piano-keyboard#my-piano(v-model='playing', :count='keyCount', :disabled='!power')
+			template(v-slot:key='{ note }')
+				span(v-text='noteToKeyMap[note]')
 
 </template>
 

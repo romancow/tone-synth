@@ -8,18 +8,22 @@ namespace Touch {
 			return Object.assign({}, event, {
 				changedTouches: Array.from(event.changedTouches),
 				targetTouches: Array.from(event.targetTouches),
-				touches: Array.from(event.touches)
+				touches: Array.from(event.touches),
+				bubbles: true
 			}) as TouchEventInit
+		}
+
+		function dispatch(type: string, eventInit: TouchEventInit, targets: (EventTarget | null)[]) {
+			const dispatchEvent = new TouchEvent(type, eventInit)
+			targets.forEach(target => target?.dispatchEvent(dispatchEvent))
 		}
 
 		export function getContext(event: TouchEvent) {
 			const eventInit = initFrom(event)
 			return {
 				touches: eventInit.changedTouches ?? [],
-				dispatch(type: string, targets: EventTarget[]) {
-					const dispatchEvent = new TouchEvent(type, eventInit)
-					targets.forEach(target => target?.dispatchEvent(dispatchEvent))
-				}
+				touchleave: dispatch.bind(event, 'touchleave', eventInit),
+				touchover: dispatch.bind(event, 'touchover', eventInit)
 			}
 		}
 	}
@@ -30,30 +34,35 @@ export default class TouchOverDispatcher {
 	private current: Record<number, EventTarget> = {}
 
 	move(event: TouchEvent) {
-		const { touches, dispatch } = Touch.Event.getContext(event)
+		const { touches, touchleave, touchover } = Touch.Event.getContext(event)
 		const current = touches.map(touch => this.fetch(touch))
 		const hovers = touches.map(touch => this.update(touch))
-		const touchleave = current.filter(target => !hovers?.includes(target))
-		const touchover = hovers.filter(hover => !current?.includes(hover))
-		dispatch('touchleave', touchleave)
-		dispatch('touchover', touchover)
+		const leaveTargets = current.filter(target => !hovers?.includes(target))
+		const overTargets = hovers.filter(hover => !current?.includes(hover))
+		touchleave(leaveTargets)
+		touchover(overTargets)
 	}
 
 	end(event: TouchEvent) {
-		const { touches, dispatch } = Touch.Event.getContext(event)
-		const targets = touches.map(touch => this.update(touch, true))
-		dispatch('touchend', targets)
+		const { touches, touchleave } = Touch.Event.getContext(event)
+		const targets = touches.map(touch => this.remove(touch))
+		touchleave(targets)
 	}
 
 	protected fetch({ identifier, target }: Touch) {
 		return this.current[identifier] ??= target
 	}
 
-	protected update(touch: Touch, isEnd = false) {
-		const [{ current }, { identifier }] = [this, touch]
-		const target = current[identifier] = Touch.getOverTarget(touch)
-		if (isEnd) delete current[identifier]
-		return target
+	protected update(touch: Touch) {
+		const { identifier } = touch
+		return this.current[identifier] = Touch.getOverTarget(touch)
+	}
+
+	protected remove(touch: Touch) {
+		const { identifier } = touch
+		const target = Touch.getOverTarget(touch)
+		delete this.current[identifier]
+		return (target === touch.target) ? null : target
 	}
 
 }

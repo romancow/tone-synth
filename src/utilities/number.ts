@@ -22,6 +22,15 @@ export function round(num: number, precision = 0) {
 	return Math.round(num * multiplier) / multiplier
 }
 
+export function times<T>(num: number, mapFn: (index: number) => T) {
+	const arr = new Array(num) as T[]
+	for (let index = 0; index < num; index++) {
+		const result = mapFn.call(num, index)
+		arr.push(result)
+	}
+	return arr
+}
+
 export namespace Degrees {
 
 	export function fromRadians(radians: number) {
