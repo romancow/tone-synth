@@ -10,11 +10,12 @@ import keyMap from '@/key-map'
 import VPianoKeyboard from '@/components/v-piano-keyboard.vue'
 import VLed from '@/components/v-led.vue'
 import VKnob from '@/components/v-knob.vue'
+import MidiSelect from '@/components/midi-select.vue'
 
 const getKeyCount = () => (window.innerWidth < 720) ? 12 : 24
 
 @Component({
-	components: { VPianoKeyboard, VLed, VKnob }
+	components: { VPianoKeyboard, VLed, VKnob, MidiSelect }
 })
 export default class App extends Vue {
 
@@ -32,7 +33,8 @@ export default class App extends Vue {
 		if (power) this.setSynth()
 		else {
 			this.playing = []
-			this.synth?.dispose()
+			try { this.synth?.dispose() }
+			catch (err) { console.error(err) }
 			this.synth = null
 		} 
 	}
@@ -76,6 +78,10 @@ export default class App extends Vue {
 		return _Object.invert(keyMap)
 	}
 
+	get supportsMidi() {
+		return !!navigator.requestMIDIAccess
+	}
+
 	isPlaying(note?: Note) {
 		const { playing } = this
 		return (note == null) ? !!playing.length : playing.includes(note)
@@ -94,7 +100,19 @@ export default class App extends Vue {
 	setSynth({ oscillators = [], instrument}: Instrument = this.instrument) {
 		const type: any = oscillators[0]
 		const opts = type ? { oscillator: { type }} : undefined
+		try { this.synth?.dispose() }
+		catch (err) { console.error(err) }
 		this.synth = new instrument(opts).toDestination()
+	}
+
+	noteOn(note: Note) {
+		if (!this.isPlaying(note))
+			this.playing = [...this.playing, note]
+	}
+
+	noteOff(note: Note) {
+		if (this.isPlaying(note))
+			this.playing = this.playing.filter(n => n !== note)
 	}
 
 	@Watch('playing')
@@ -173,7 +191,6 @@ export default class App extends Vue {
 						:value='instrument',
 						v-text='instrument.name'
 					)
-			.spacer
 			.oscillator.setting(:class='{ disabled: !hasOscillator }')
 				label(for='oscillator-select') oscillator
 				select(
@@ -187,6 +204,16 @@ export default class App extends Vue {
 						:value='osc',
 						v-text='osc'
 					)
+			.spacer
+			.midi-input.setting(v-if='supportsMidi', :class='{ disabled: !power }')
+				label(for='midi-select') midi input
+				midi-select(
+					name='midi-select',
+					:disabled='!power',
+					@noteon='noteOn',
+					@noteoff='noteOff',
+					@change='blurMe'
+				)
 			//- .spacer
 			//- .detune.setting
 			//- 	label detune ({{ detune }})
