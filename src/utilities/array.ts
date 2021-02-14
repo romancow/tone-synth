@@ -29,3 +29,8 @@ export function remove<T, A extends T[] = T[]>(arr: A, search: T | Predicate<T, 
 		.forEach(index => arr.splice(index, 1))
 	return arr
 }
+
+export function atIndex<T>(arr: readonly T[], index: number) {
+	const end = (index + 1) || undefined
+	return arr.slice(index, end)[0]
+}

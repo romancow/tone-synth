@@ -1,8 +1,9 @@
 import { times } from '@/utilities/number'
+import { atIndex } from '@/utilities/array'
 
 type Note = `${Note.Basic}${Note.Octave}`
 
-namespace Note {
+namespace Note {	
 	export const Notes: Basic[] = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 
 	export type Basic = 'C' | 'C#' | 'D' | 'D#' | 'E' | 'F' | 'F#' | 'G' | 'G#' | 'A' | 'A#' | 'B'
@@ -29,15 +30,23 @@ namespace Note {
 		}
 	}
 
+	function transposeFromIndex(index: number, octave: number, halfSteps: number) {
+		const indexSum = index + halfSteps
+		const nextNote = atIndex(Notes, indexSum % Notes.length)
+		const nextOctave = Math.floor(indexSum / Notes.length) + octave
+		return `${nextNote}${nextOctave}` as Note 
+	}
+
+	export function transpose(note: Note, halfSteps: number) {
+		const { note: basic, octave } = split(note)
+		const index = Notes.indexOf(basic)
+		return transposeFromIndex(index, octave, halfSteps)
+	}
+
 	export function getRange(first: Note, count: number) {
 		const { note, octave } = split(first)
 		const noteIndex = Notes.indexOf(note)
-		return times(count, index => {
-			const indexSum = noteIndex + index
-			const nextNote = Notes[indexSum % Notes.length]
-			const nextOctave = Math.floor(indexSum / Notes.length) + octave
-			return `${nextNote}${nextOctave}` as Note 
-		})
+		return times(count, index => transposeFromIndex(noteIndex, octave, index))
 	}
 }
 
