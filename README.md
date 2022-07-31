@@ -1,20 +1,9 @@
 # Tone Synth
-Try it [here](https://romancow.github.io/tone-synth/).
+A little browser synth created with [Tone.js](https://tonejs.github.io/) and the Web MIDI API.
 
-## Project setup
-```
-npm install
-```
+Try it [here](https://seanwilson.dev/tone-synth/).
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+Preview:
+![Tone Synth preview](preview.jpg)
 
-### Compiles and minifies for production
-```
-npm run build
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+The keyboard-style UI was created using [Vue.js](https://vuejs.org/). It supports playing notes by clicking on the piano keys, typing the corresponding keys, or via connected midi devices. Just click the power button, then select your instrument and oscillator.
